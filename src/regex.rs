@@ -25,17 +25,17 @@ macro_rules! lazy_static {
 const RE_ERROR: &str = "regex pattern error";
 
 lazy_static! {
-    re_header, Regex, {
-        Regex::new(r"running \d+ tests").expect(RE_ERROR)
-    };
-    re_lines_of_tests, Regex, {
-        // Common test info:
-        // test submod::normal_test ... ok
-        // test submod::ignore ... ignored, reason
-        // test submod::ignore_without_reason ... ignored
-        // test submod::panic::should_panic - should panic ... ok
-        // test submod::panic::should_panic_without_reanson - should panic ... ok
-        Regex::new(r"(?m)^test \S+( - should panic)? \.\.\. \S+(, .*)?$").expect(RE_ERROR)
+    re, Re, {
+        Re {
+            head: Regex::new(r"running \d+ tests").expect(RE_ERROR),
+            // Common test info:
+            // test submod::normal_test ... ok
+            // test submod::ignore ... ignored, reason
+            // test submod::ignore_without_reason ... ignored
+            // test submod::panic::should_panic - should panic ... ok
+            // test submod::panic::should_panic_without_reanson - should panic ... ok
+            tree: Regex::new(r"(?m)^test \S+( - should panic)? \.\.\. \S+(, .*)?$").expect(RE_ERROR)
+        }
     };
 }
 
@@ -46,11 +46,12 @@ pub struct ParsedCargoTestOutput<'s> {
 }
 
 pub fn parse_cargo_test_output(text: &str) -> ParsedCargoTestOutput<'_> {
-    let head = re_header()
+    let head = re()
+        .head
         .find(text)
         .expect("`running \\d+ tests` not found");
     let head_end = head.end() + 1;
-    let line: Vec<_> = re_lines_of_tests().find_iter(&text[head_end..]).collect();
+    let line: Vec<_> = re().tree.find_iter(&text[head_end..]).collect();
     let tree_end = line.last().map_or(head_end, |cap| head_end + cap.end() + 1);
     let mut tree: Vec<_> = line.into_iter().map(|cap| cap.as_str()).collect();
     tree.sort_unstable();
@@ -59,9 +60,4 @@ pub fn parse_cargo_test_output(text: &str) -> ParsedCargoTestOutput<'_> {
         tree,
         detail: text[tree_end..].trim(),
     }
-}
-
-/// Get the lines of tests from `cargo test`.
-pub fn get_lines_of_tests(text: &str) -> impl Iterator<Item = &str> {
-    re_lines_of_tests().find_iter(text).map(|m| m.as_str())
 }
