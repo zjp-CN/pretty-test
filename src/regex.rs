@@ -27,7 +27,8 @@ const RE_ERROR: &str = "regex pattern error";
 lazy_static! {
     re, Re, {
         Re {
-            head: Regex::new(r"running \d+ tests").expect(RE_ERROR),
+            // running 0 tests; running 1 test; running 2 tests; ...
+            head: Regex::new(r"running \d+ tests?").expect(RE_ERROR),
             // Common test info:
             // test submod::normal_test ... ok
             // test submod::ignore ... ignored, reason
