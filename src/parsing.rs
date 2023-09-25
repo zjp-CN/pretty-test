@@ -366,8 +366,8 @@ pub fn parse_stderr(stderr: &str) -> Vec<TestRunner> {
         }
     }
     re().ty
-        .captures_iter(stderr)
-        .map(|cap| parse_stderr_inner(&cap))
+        .captures_iter(dbg!(stderr))
+        .map(|cap| dbg!(parse_stderr_inner(&cap)))
         .collect::<Vec<_>>()
 }
 
