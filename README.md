@@ -67,6 +67,15 @@ cargo pretty-test
 
 Note: all the arguments passed to `cargo pretty-test` are forwarded to `cargo test`.
 
+## Develepment
+
+To test for `cargo-pretty-test`, `cargo test --features "colored/no-color"` should be run, because
+`colored` crate will auto insert escape chars in terminal-like environment. But it's hard to tell
+what the confusing terminal-like environment is in testing. So it'd be better using `colored/no-color`
+feature to prevent any escaping in testing. ([issue#14])
+
+[issue#14]: https://github.com/josecelano/cargo-pretty-test/pull/14#issuecomment-1733525186
+
 ## Credits
 
 - First commit author [@ZJPzjp](https://github.com/zjp-CN).
