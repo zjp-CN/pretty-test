@@ -67,6 +67,12 @@ cargo pretty-test
 
 Note: all the arguments passed to `cargo pretty-test` are forwarded to `cargo test`.
 
+Special arguments:
+* `--emit-json` will print JSON of [parsed test runners](TestRunners) which the view of test tree is derived from.
+  So this is an argument that `cargo test` doesn't accept but `cargo pretty-test` accepts.
+
+[TestRunners]: https://docs.rs/cargo-pretty-test/*/cargo_pretty_test/parsing/struct.TestRunners.html
+
 ## Develepment
 
 To test for `cargo-pretty-test`, `cargo test --features "colored/no-color"` should be run, because

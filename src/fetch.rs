@@ -13,11 +13,17 @@ pub struct Emit {
     output: Output,
     /// Don't parse the output. Forward the output instead.
     no_parse: bool,
+    /// Emit the parsed TestRunners (filtering out empty ones).
+    emit_json: bool,
 }
 
 impl Emit {
     pub fn run(self) -> ExitCode {
-        let Emit { output, no_parse } = self;
+        let Emit {
+            output,
+            no_parse,
+            emit_json,
+        } = self;
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);
         if no_parse {
@@ -29,6 +35,8 @@ impl Emit {
             );
             eprintln!("{stderr}");
             println!("{stdout}");
+        } else if emit_json {
+            println!("{}", parse_cargo_test(&stderr, &stdout).to_json_string());
         } else {
             let (tree, stats) = parse_cargo_test_output(&stderr, &stdout);
             println!("{tree}");
@@ -62,8 +70,11 @@ pub fn cargo_test() -> Emit {
         // `cargo-pretty-test` yields ["path-to-cargo-pretty-test", rest]
         &passin[1..]
     };
-    let no_parse = passin.iter().any(|arg| arg == "--help" || arg == "-h");
-    let args = forward.iter().filter(|arg| *arg != "--nocapture");
+    let args = forward
+        .iter()
+        .filter(|&arg| arg != "--nocapture" && arg != "--emit-json");
+    let no_parse = forward.iter().any(|arg| arg == "--help" || arg == "-h");
+    let emit_json = forward.iter().any(|arg| arg == "--emit-json");
     Emit {
         output: Command::new("cargo")
             .arg("test")
@@ -71,6 +82,7 @@ pub fn cargo_test() -> Emit {
             .output()
             .expect("`cargo test` failed"),
         no_parse,
+        emit_json,
     }
 }
 

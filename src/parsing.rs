@@ -6,6 +6,9 @@ use std::{
     time::Duration,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// The core parsing function that extracts all the information from `cargo test`
 /// but filters out empty tests.
 pub fn parse_cargo_test<'s>(stderr: &'s str, stdout: &'s str) -> TestRunners<'s> {
@@ -54,7 +57,9 @@ pub type Pkg<'s> = Option<Text<'s>>;
 
 /// All the test runners with original display order but filtering empty types out.
 #[derive(Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TestRunners<'s> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub pkgs: IndexMap<Pkg<'s>, PkgTest<'s>>,
 }
 
@@ -73,6 +78,10 @@ impl<'s> TestRunners<'s> {
         }
         runners
     }
+    #[cfg(feature = "serde")]
+    pub fn to_json_string(&mut self) -> String {
+        serde_json::to_string_pretty(self).expect("Serialize error")
+    }
 }
 
 /// The raw output from `cargo test`.
@@ -82,7 +91,9 @@ pub type Text<'s> = &'s str;
 /// For doc test type, tests from multiple crates are considered
 /// to be under a presumed Doc pkg.
 #[derive(Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PkgTest<'s> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub inner: Vec<Data<'s>>,
     pub stats: Stats,
 }
@@ -103,29 +114,38 @@ impl<'s> PkgTest<'s> {
 
 /// Information extracted from stdout & stderr.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Data<'s> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub runner: TestRunner<'s>,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub info: TestInfo<'s>,
 }
 
 /// A test runner determined by the type and binary & source path.
 #[derive(Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TestRunner<'s> {
     pub ty: TestType,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub src: Src<'s>,
 }
 
 /// All the information reported by a test runner.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TestInfo<'s> {
     /// Raw test information from stdout.
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub raw: Text<'s>,
     pub stats: Stats,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub parsed: ParsedCargoTestOutput<'s>,
 }
 
 /// Types of a test.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TestType {
     UnitLib,
     UnitBin,
@@ -137,21 +157,25 @@ pub enum TestType {
 
 /// Source location and binary name for a test runner.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Src<'s> {
     /// Path of source code (except Doc type) which is relative to its crate
     /// rather than root of project.
     ///
     /// This means it's possible to see same path from different crates.
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub src_path: Text<'s>,
     /// Name from the path of test runner binary. The path usually starts with `target/`.
     ///
     /// But this field doesn't contain neither the `target/...` prefix nor hash postfix,
     /// so it's possible to see same path from different crates.
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub bin_name: Text<'s>,
 }
 
 /// Statistics of test.
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Stats {
     pub ok: bool,
     pub total: u32,
@@ -291,9 +315,13 @@ impl std::ops::AddAssign<&Stats> for Stats {
 
 /// Output from one test runner.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ParsedCargoTestOutput<'s> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub head: Text<'s>,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub tree: Vec<Text<'s>>,
+    #[cfg_attr(feature = "serde", serde(borrow))]
     pub detail: Text<'s>,
 }
 
