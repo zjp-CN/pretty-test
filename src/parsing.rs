@@ -38,10 +38,17 @@ pub fn parse_cargo_test_with_empty_ones<'s>(
 ) -> impl Iterator<Item = (TestRunner<'s>, TestInfo<'s>)> {
     let parsed_stderr = parse_stderr(stderr);
     let parsed_stdout = parse_stdout(stdout);
+    let err_len = parsed_stderr.len();
+    let out_len = parsed_stdout.len();
     assert_eq!(
-        parsed_stderr.len(),
-        parsed_stdout.len(),
-        "the amount of test runners from stderr should equal to that from stdout"
+        err_len, out_len,
+        "the amount of test runners from stderr `{err_len}` should\
+         equal to that from stdout `{out_len}`\n\
+         *************************************\n\
+         stderr = {stderr}\n\
+         *************************************\n\
+         stdout = {stdout}\n\
+         *************************************\n"
     );
     parsed_stderr.into_iter().zip(parsed_stdout)
 }
